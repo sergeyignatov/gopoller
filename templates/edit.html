@@ -1,0 +1,43 @@
+<div class="row">
+	<div class="col-xs-2">
+		{{ if .Id }}
+			<a href="/delete/{{.Id}}">Delete</a>
+		{{ end }}
+	</div>
+	<div class="col-xs-4">
+		<form role="form" method="POST" action="/store">
+			<input type="hidden" name="id" value="{{.Id}}" />
+			<div class="form-group">
+				<label>Url</label>
+				<input type="text" class="form-control" id="url" name="url" value="{{.Url}}"  />
+			</div>
+			<div class="form-group">
+				<label>Period</label>
+                <input type="text" id="period" name="period" value="{{.Period}}" />
+			</div>
+<div class="form-group">
+				<label>StartTime</label>
+                <input type="text" id="starttime" name="starttime" value="{{.StartTime}}" />
+			</div>
+<div class="form-group">
+				<label>StopTime</label>
+                <input type="text" id="stoptime" name="stoptime" value="{{.StopTime}}" />
+			</div>
+<div class="form-group">
+				<label>Weekdays</label>
+                <select id="weekdays" multiple name="weekdays"  >
+                </select>
+                {{ range $value := .Weekdays  }}
+                {{$value}}
+                {{end}}
+			</div>
+
+
+
+
+			<button type="submit" class="btn btn-default">Submit</button>
+		</form>
+	</div>
+</div>
+
+<script type="text/javascript" src="/static/js/write.js"></script>

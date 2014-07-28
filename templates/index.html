@@ -1,0 +1,25 @@
+<div>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Url</th>
+                <th>Period</th>
+                <th>Running?</th>
+                <th>Output</th>
+                <th>Last update</th>
+            </tr>
+        </thead>
+    {{ range $value := . }}
+    <tr>
+        <td><a href="/edit/{{$value.Id}}">{{$value.Url}}</a></td>
+        <td>{{$value.Period}}</td>
+        <td><a href="/toggle/{{$value.Id}}">{{$value.Running}}</a></td>
+         <td>{{$value.Output}}</td>
+ <td>{{$value.Last}}</td>
+
+
+        
+    </tr>
+    {{ end }}
+</table>
+</div>

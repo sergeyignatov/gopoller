@@ -1,0 +1,44 @@
+<div class="row">
+	<div class="col-xs-2">
+		{{ if .Id }}
+			<a href="/delete/{{.Id}}">Delete</a>
+		{{ end }}
+	</div>
+	<div class="col-xs-4">
+		<form role="form" method="POST" action="/store">
+			<input type="hidden" name="id" value="{{.Id}}" />
+			<div class="form-group">
+				<label for="url">Url</label>
+				<input type="text" class="form-control" id="url" name="url" value="{{.Url}}"  />
+			</div>
+			<div class="form-group">
+                <label for="period">Period</label>
+                <input type="text" class="form-control" id="period" name="period" value="{{.Period}}" />
+			</div>
+<div class="form-group">
+				<label for="starttime">StartTime</label>
+                <input type="text" class="form-control" id="starttime" name="starttime" value="{{.StartTime}}" />
+			</div>
+<div class="form-group">
+				<label for="stoptime">StopTime</label>
+                <input type="text" class="form-control" id="stoptime" name="stoptime" value="{{.StopTime}}" />
+			</div>
+<div class="form-group">
+    <label for="weekdays">We`:w
+        `ekdays</label>
+                <select id="weekdays" class="form-control" multiple name="weekdays"  >
+                    {{ range $key, $value := .Weekdays }}
+                    <option value="{{$key}}" {{if $value.Enabled }} selected {{end}}>{{$value.Name}}</option>
+                    {{end}}
+                </select>
+			</div>
+
+
+
+
+			<button type="submit" class="btn btn-default">Submit</button>
+		</form>
+	</div>
+</div>
+
+<script type="text/javascript" src="/static/js/write.js"></script>
