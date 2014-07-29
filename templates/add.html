@@ -16,6 +16,11 @@
                 <input type="text" class="form-control" id="period" name="period" value="{{.Period}}" />
 			</div>
 <div class="form-group">
+                <label for="phone">Phone</label>
+                <input type="text" class="form-control" id="phone" name="phone" value="{{.Phone}}" />
+			</div>
+
+<div class="form-group">
 				<label for="starttime">StartTime</label>
                 <input type="text" class="form-control" id="starttime" name="starttime" value="{{.StartTime}}" />
 			</div>
@@ -24,8 +29,7 @@
                 <input type="text" class="form-control" id="stoptime" name="stoptime" value="{{.StopTime}}" />
 			</div>
 <div class="form-group">
-    <label for="weekdays">We`:w
-        `ekdays</label>
+    <label for="weekdays">Weekdays</label>
                 <select id="weekdays" class="form-control" multiple name="weekdays"  >
                     {{ range $key, $value := .Weekdays }}
                     <option value="{{$key}}" {{if $value.Enabled }} selected {{end}}>{{$value.Name}}</option>
