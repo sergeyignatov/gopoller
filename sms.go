@@ -78,7 +78,7 @@ func sendSMS(phone string, text string) {
 		defer resp.Body.Close()
 		body, err := ioutil.ReadAll(resp.Body)
 		if err == nil {
-			fmt.Println(string(body))
+			log.Print(string(body))
 		}
 	}
 }

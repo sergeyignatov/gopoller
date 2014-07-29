@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/gob"
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"net"
@@ -54,7 +53,6 @@ func LoadTasks(dir string) (statemap, error) {
 	tm := make(statemap)
 	files, _ := ioutil.ReadDir(dir)
 	for _, f := range files {
-		fmt.Println(f.Name())
 		fh, err := os.Open(path.Join(dir, f.Name()))
 		if err != nil {
 			continue
@@ -211,7 +209,6 @@ func storeHandler(rnd render.Render, r *http.Request, params martini.Params) {
 	stoptime := r.FormValue("stoptime")
 	weekdays := r.Form["weekdays"]
 	phone := r.FormValue("phone")
-	fmt.Println(weekdays)
 	p, err := strconv.Atoi(r.FormValue("period"))
 	var period uint = 30
 	if err == nil {
@@ -269,7 +266,6 @@ func addSMSHandler(rnd render.Render) {
 	client.Cmd("select", Settings.RedisDB)
 
 	settings, _ := client.Cmd("hgetall", "gopoller/smspilot").Hash()
-	fmt.Println(settings)
 
 	rnd.HTML(200, "addsms", settings)
 }
@@ -293,7 +289,7 @@ func main() {
 		IndentJSON: true,                       // Output human readable JSON
 	}))
 
-	staticOptions := martini.StaticOptions{Prefix: "static"}
+	staticOptions := martini.StaticOptions{Prefix: "static", SkipLogging: true}
 	m.Use(martini.Static("static", staticOptions))
 
 	m.Get("/", indexHandler)
