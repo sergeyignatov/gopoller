@@ -21,18 +21,34 @@ import (
 
 var timeout = time.Duration(2 * time.Second)
 
-func LoadRedisTasks() (statemap, error) {
-	tm := make(statemap)
+func PrepareRedis() (*redis.Client, error) {
+	client, err := redis.DialTimeout("tcp", "127.0.0.1:6379", time.Duration(10)*time.Second)
+	//defer client.Close()
+	if err != nil {
+		log.Println("failed to create the client", err)
+		return client, err
+	}
+	client.Cmd("select", Settings.RedisDB)
+	return client, nil
 
+}
+func MakeRedisCMD(cmd string, args ...interface{}) *redis.Reply {
 	client, err := redis.DialTimeout("tcp", "127.0.0.1:6379", time.Duration(10)*time.Second)
 	defer client.Close()
 	if err != nil {
 		log.Println("failed to create the client", err)
-		return nil, err
+		return nil
 	}
 	client.Cmd("select", Settings.RedisDB)
 
-	res, err := client.Cmd("hgetall", "gopoller/tasks").Hash()
+	return client.Cmd(cmd, args)
+
+}
+func LoadRedisTasks() (statemap, error) {
+	tm := make(statemap)
+	//client, _ := PrepareRedis()
+
+	res, err := MakeRedisCMD("hgetall", "gopoller/tasks").Hash()
 	if err != nil {
 		return nil, err
 	}
@@ -198,18 +214,10 @@ func deleteHandler(rnd render.Render, r *http.Request, params martini.Params) {
 	rnd.Redirect("/")
 }
 func storesmsHandler(rnd render.Render, r *http.Request, params martini.Params) {
-	client, err := redis.DialTimeout("tcp", "127.0.0.1:6379", time.Duration(10)*time.Second)
-	defer client.Close()
-	if err != nil {
-		log.Println("failed to create the client", err)
-		return
-	}
 	apikey := r.FormValue("apikey")
 	from := r.FormValue("from")
-	client.Cmd("select", Settings.RedisDB)
-
-	client.Cmd("hset", "gopoller/smspilot", "apikey", apikey)
-	client.Cmd("hset", "gopoller/smspilot", "from", from)
+	MakeRedisCMD("hset", "gopoller/smspilot", "apikey", apikey)
+	MakeRedisCMD("hset", "gopoller/smspilot", "from", from)
 
 	rnd.Redirect("/")
 }
@@ -275,15 +283,7 @@ func addHandler(rnd render.Render) {
 	rnd.HTML(200, "add", task)
 }
 func addSMSHandler(rnd render.Render) {
-	client, err := redis.DialTimeout("tcp", "127.0.0.1:6379", time.Duration(10)*time.Second)
-	defer client.Close()
-	if err != nil {
-		log.Println("failed to create the client", err)
-		return
-	}
-	client.Cmd("select", Settings.RedisDB)
-
-	settings, _ := client.Cmd("hgetall", "gopoller/smspilot").Hash()
+	settings, _ := MakeRedisCMD("hgetall", "gopoller/smspilot").Hash()
 
 	rnd.HTML(200, "addsms", settings)
 }

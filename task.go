@@ -8,8 +8,6 @@ import (
 	"os"
 	"path"
 	"time"
-
-	"github.com/fzzy/radix/redis"
 )
 
 type DayOfWeek struct {
@@ -108,16 +106,9 @@ func (t *Task) Stop() {
 }
 
 func (t *Task) Save() (err error) {
-	client, err := redis.DialTimeout("tcp", "127.0.0.1:6379", time.Duration(10)*time.Second)
-	defer client.Close()
-	if err != nil {
-		log.Println("failed to create the client", err)
-		return err
-	}
-	client.Cmd("select", Settings.RedisDB)
 
 	key := "gopoller/tasks"
-	fname := path.Join(Settings.Dir,t.Id)
+	fname := path.Join(Settings.Dir, t.Id)
 	b := new(bytes.Buffer)
 	enc := gob.NewEncoder(b)
 	err = enc.Encode(t)
@@ -131,7 +122,7 @@ func (t *Task) Save() (err error) {
 		return eopen
 	}
 	_, e := fh.Write(b.Bytes())
-	client.Cmd("hset", key, t.Id, b.Bytes())
+	MakeRedisCMD("hset", key, t.Id, b.Bytes())
 
 	if e != nil {
 		return e
@@ -140,14 +131,6 @@ func (t *Task) Save() (err error) {
 
 }
 func (t *Task) Delete() {
-	client, err := redis.DialTimeout("tcp", "127.0.0.1:6379", time.Duration(10)*time.Second)
-	defer client.Close()
-	if err != nil {
-		log.Println("failed to create the client", err)
-		return
-	}
-	client.Cmd("select", Settings.RedisDB)
-
-	client.Cmd("hdel", "gopoller/tasks", t.Id)
+	MakeRedisCMD("hdel", "gopoller/tasks", t.Id)
 	os.Remove(path.Join(Settings.Dir, t.Id))
 }
