@@ -5,8 +5,8 @@ import (
 	"encoding/gob"
 	"fmt"
 	"log"
-	"net/http"
 	"os"
+	"path"
 	"time"
 
 	"github.com/fzzy/radix/redis"
@@ -47,12 +47,6 @@ func (t *Task) Start() {
 	t.Running = true
 	log.Print(t.Url, " started")
 	t.Ch = make(chan bool)
-	transport := http.Transport{
-		Dial: dialTimeout,
-	}
-	client := http.Client{
-		Transport: &transport,
-	}
 	intime := false
 	for {
 		now := time.Now()
@@ -80,20 +74,24 @@ func (t *Task) Start() {
 			}
 		}
 		if intime && ((60*now.Hour() + now.Minute()) >= (60*starttime.Hour() + starttime.Minute())) && ((60*now.Hour() + now.Minute()) <= (60*stoptime.Hour() + stoptime.Minute())) {
-			out, err := check(client, t.Url)
+			out, err := check(t.Url)
 			t.Output = out
 			t.Last = time.Now()
+			fmt.Println(t.Url, t.Error, err)
 			if err != nil && !t.Error {
-				fmt.Println(err)
+				fmt.Println("new", err)
 				t.Error = true
 				if len(t.Phone) > 3 {
-					go sendSMS(t.Phone, out+" : "+t.Url)
+					fmt.Println("Send SMS to", t.Phone)
+					//go sendSMS(t.Phone, out+" : "+t.Url)
 				}
-				log.Print(t.Url, ' ', out)
+				log.Print(t.Url, " ", out)
 
 			} else if err == nil && t.Error {
 				log.Print(t.Url, " back to ok")
 				t.Error = false
+			} else if err != nil {
+				t.Error = true
 			} else {
 				t.Error = false
 			}
@@ -150,5 +148,5 @@ func (t *Task) Delete() {
 	client.Cmd("select", Settings.RedisDB)
 
 	client.Cmd("hdel", "gopoller/tasks", t.Id)
-	//os.Remove("/tmp/states/" + t.Id)
+	os.Remove(path.Join(Settings.Dir, t.Id))
 }

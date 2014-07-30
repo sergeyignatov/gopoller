@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/gob"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net"
@@ -75,6 +76,7 @@ func dialTimeout(network, addr string) (net.Conn, error) {
 
 type SettingsType struct {
 	RedisDB int
+	Dir     string
 }
 
 //var TaskMap = make(map[string]models.Task)
@@ -83,8 +85,17 @@ type statemap map[string]*Task
 var TaskMap = make(statemap)
 var Settings = SettingsType{}
 
-func check(client http.Client, url string) (string, error) {
+func check(url string) (string, error) {
+	transport := http.Transport{
+		Dial: dialTimeout,
+	}
+
+	client := http.Client{
+		Transport: &transport,
+	}
+
 	resp, err := client.Get(url)
+	fmt.Println("check", url)
 	var out string
 	if err != nil {
 		out = "host is unreachable"
@@ -97,7 +108,7 @@ func check(client http.Client, url string) (string, error) {
 				out = "wrong answer"
 				err = errors.New(out)
 			} else {
-				out = string(body)
+				out = string(body[:100])
 			}
 		}
 	}
@@ -240,6 +251,13 @@ func storeHandler(rnd render.Render, r *http.Request, params martini.Params) {
 		id = GenerateId()
 		task := NewTask(id, url, period)
 		task.Phone = phone
+		for _, val := range weekdays {
+			ival, _ := strconv.Atoi(val)
+			tmp := task.Weekdays[ival]
+			tmp.Enabled = true
+			task.Weekdays[ival] = tmp
+		}
+
 		//task.Weekdays = weekdays
 		task.Save()
 		TaskMap[id] = task
@@ -272,6 +290,11 @@ func addSMSHandler(rnd render.Render) {
 func main() {
 	//TaskMap, _ = LoadState("/tmp/state.dmp")
 	Settings.RedisDB = 4
+	Settings.Dir = "/tmp/states"
+	_, err := os.Stat(Settings.Dir)
+	if err != nil {
+		os.MkdirAll(Settings.Dir, 0755)
+	}
 	TaskMap, _ = LoadRedisTasks()
 	for id, val := range TaskMap {
 		if val.Running {
@@ -302,6 +325,6 @@ func main() {
 	m.Get("/add", addHandler)
 	m.Get("/addsms", addSMSHandler)
 	m.Get("/delete/:id", deleteHandler)
-	m.Run()
+	log.Fatal(http.ListenAndServe("127.0.0.1:3000", m))
 
 }
