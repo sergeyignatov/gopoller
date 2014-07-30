@@ -76,11 +76,11 @@ func (t *Task) Start() {
 		if intime && ((60*now.Hour() + now.Minute()) >= (60*starttime.Hour() + starttime.Minute())) && ((60*now.Hour() + now.Minute()) <= (60*stoptime.Hour() + stoptime.Minute())) {
 			out, err := check(t.Url)
 			t.Output = out
-			t.Last = time.Now()
 			fmt.Println(t.Url, t.Error, err)
 			if err != nil && !t.Error {
 				fmt.Println("new", err)
 				t.Error = true
+				t.Last = time.Now()
 				if len(t.Phone) > 3 {
 					fmt.Println("Send SMS to", t.Phone)
 					//go sendSMS(t.Phone, out+" : "+t.Url)
@@ -90,6 +90,7 @@ func (t *Task) Start() {
 			} else if err == nil && t.Error {
 				log.Print(t.Url, " back to ok")
 				t.Error = false
+				t.Last = time.Now()
 			} else if err != nil {
 				t.Error = true
 			} else {
@@ -116,7 +117,7 @@ func (t *Task) Save() (err error) {
 	client.Cmd("select", Settings.RedisDB)
 
 	key := "gopoller/tasks"
-	fname := "/tmp/states/" + t.Id
+	fname := path.Join(Settings.Dir,t.Id)
 	b := new(bytes.Buffer)
 	enc := gob.NewEncoder(b)
 	err = enc.Encode(t)
