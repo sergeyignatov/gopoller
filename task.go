@@ -82,6 +82,7 @@ func (t *Task) Start() {
 				if len(t.Phone) > 3 {
 					fmt.Println("Send SMS to", t.Phone)
 					//go sendSMS(t.Phone, out+" : "+t.Url)
+					go sendPush(t.Phone, out+" : "+t.Url)
 				}
 				log.Print(t.Url, " ", out)
 

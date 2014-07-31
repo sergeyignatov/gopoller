@@ -13,6 +13,7 @@ import (
 	"path"
 	"strconv"
 	"time"
+
 	"github.com/go-martini/martini"
 	"github.com/martini-contrib/render"
 )
@@ -161,7 +162,12 @@ func check(url string) (string, error) {
 				out = "wrong answer"
 				err = errors.New(out)
 			} else {
-				out = string(body[:100])
+				if len(body) > 100 {
+					out = string(body[:100])
+
+				} else {
+					out = string(body)
+				}
 			}
 		}
 	}
