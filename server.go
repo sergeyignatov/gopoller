@@ -13,8 +13,6 @@ import (
 	"path"
 	"strconv"
 	"time"
-
-	"github.com/fzzy/radix/redis"
 	"github.com/go-martini/martini"
 	"github.com/martini-contrib/render"
 )
@@ -59,7 +57,7 @@ func LoadSMSSettings() *SMSPilotSettings {
 
 var timeout = time.Duration(2 * time.Second)
 
-func PrepareRedis() (*redis.Client, error) {
+/*func PrepareRedis() (*redis.Client, error) {
 	client, err := redis.DialTimeout("tcp", "127.0.0.1:6379", time.Duration(10)*time.Second)
 	//defer client.Close()
 	if err != nil {
@@ -103,7 +101,7 @@ func LoadRedisTasks() (statemap, error) {
 	}
 	return tm, nil
 }
-
+*/
 func LoadTasks(dir string) (statemap, error) {
 	tm := make(statemap)
 	files, _ := ioutil.ReadDir(dir)
