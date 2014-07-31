@@ -8,9 +8,6 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
-	"time"
-
-	"github.com/fzzy/radix/redis"
 )
 
 type Message struct {
@@ -52,25 +49,18 @@ func sendPush(phone, text string) {
 }
 
 func sendSMS(phone string, text string) {
-	client, err := redis.DialTimeout("tcp", "127.0.0.1:6379", time.Duration(10)*time.Second)
-	defer client.Close()
-	if err != nil {
-		log.Println("failed to create the client", err)
-		return
-	}
-
-	settings, _ := client.Cmd("hget", "gopoller/smspilot").Hash()
+	//settings, _ := ("hget", "gopoller/smspilot").Hash()
+	settings := LoadSMSSettings()
 
 	apiURL := "http://smspilot.ru/api2.php"
 	buffer := make([]Message, 1)
 	message := Message{
-		From: settings["from"],
+		From: settings.From,
 		To:   phone,
 		Text: text}
 	buffer[0] = message
-	_, ok := settings["apikey"]
-	if ok {
-		sms := &SMSPilotMessage{Send: buffer, ApiKey: settings["apikey"]}
+	if len(settings.ApiKey) > 10 {
+		sms := &SMSPilotMessage{Send: buffer, ApiKey: settings.ApiKey}
 		b, _ := json.Marshal(sms)
 		fmt.Println(string(b))
 		bb := strings.NewReader(string(b))

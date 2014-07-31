@@ -107,7 +107,7 @@ func (t *Task) Stop() {
 
 func (t *Task) Save() (err error) {
 
-	key := "gopoller/tasks"
+	//key := "gopoller/tasks"
 	fname := path.Join(Settings.Dir, t.Id)
 	b := new(bytes.Buffer)
 	enc := gob.NewEncoder(b)
@@ -122,7 +122,7 @@ func (t *Task) Save() (err error) {
 		return eopen
 	}
 	_, e := fh.Write(b.Bytes())
-	MakeRedisCMD("hset", key, t.Id, b.Bytes())
+	//MakeRedisCMD("hset", key, t.Id, b.Bytes())
 
 	if e != nil {
 		return e
@@ -131,6 +131,6 @@ func (t *Task) Save() (err error) {
 
 }
 func (t *Task) Delete() {
-	MakeRedisCMD("hdel", "gopoller/tasks", t.Id)
+	//MakeRedisCMD("hdel", "gopoller/tasks", t.Id)
 	os.Remove(path.Join(Settings.Dir, t.Id))
 }

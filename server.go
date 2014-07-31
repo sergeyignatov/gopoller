@@ -19,6 +19,44 @@ import (
 	"github.com/martini-contrib/render"
 )
 
+type SMSPilotSettings struct {
+	ApiKey string
+	From   string
+}
+
+func (s *SMSPilotSettings) Store() error {
+	fname := path.Join(Settings.SMSSettingsDir, "smspilot.db")
+	b := new(bytes.Buffer)
+	enc := gob.NewEncoder(b)
+	err := enc.Encode(s)
+	if err != nil {
+		return err
+	}
+
+	fh, eopen := os.OpenFile(fname, os.O_CREATE|os.O_WRONLY, 0666)
+	defer fh.Close()
+	if eopen != nil {
+		return eopen
+	}
+	_, e := fh.Write(b.Bytes())
+
+	if e != nil {
+		return e
+	}
+	return nil
+}
+func LoadSMSSettings() *SMSPilotSettings {
+	fh, err := os.Open(path.Join(Settings.SMSSettingsDir, "smspilot.db"))
+	t := SMSPilotSettings{}
+
+	if err != nil {
+		return &t
+	}
+	dec := gob.NewDecoder(fh)
+	dec.Decode(&t)
+	return &t
+}
+
 var timeout = time.Duration(2 * time.Second)
 
 func PrepareRedis() (*redis.Client, error) {
@@ -91,8 +129,9 @@ func dialTimeout(network, addr string) (net.Conn, error) {
 }
 
 type SettingsType struct {
-	RedisDB int
-	Dir     string
+	RedisDB        int
+	Dir            string
+	SMSSettingsDir string
 }
 
 //var TaskMap = make(map[string]models.Task)
@@ -216,8 +255,10 @@ func deleteHandler(rnd render.Render, r *http.Request, params martini.Params) {
 func storesmsHandler(rnd render.Render, r *http.Request, params martini.Params) {
 	apikey := r.FormValue("apikey")
 	from := r.FormValue("from")
-	MakeRedisCMD("hset", "gopoller/smspilot", "apikey", apikey)
-	MakeRedisCMD("hset", "gopoller/smspilot", "from", from)
+	t := SMSPilotSettings{From: from, ApiKey: apikey}
+	t.Store()
+	//MakeRedisCMD("hset", "gopoller/smspilot", "apikey", apikey)
+	//MakeRedisCMD("hset", "gopoller/smspilot", "from", from)
 
 	rnd.Redirect("/")
 }
@@ -283,19 +324,26 @@ func addHandler(rnd render.Render) {
 	rnd.HTML(200, "add", task)
 }
 func addSMSHandler(rnd render.Render) {
-	settings, _ := MakeRedisCMD("hgetall", "gopoller/smspilot").Hash()
+	//settings, _ := MakeRedisCMD("hgetall", "gopoller/smspilot").Hash()
+	settings := LoadSMSSettings()
 
 	rnd.HTML(200, "addsms", settings)
 }
 func main() {
 	//TaskMap, _ = LoadState("/tmp/state.dmp")
 	Settings.RedisDB = 4
-	Settings.Dir = "/tmp/states"
+	Settings.Dir = "gopollerdb/tasks"
+	Settings.SMSSettingsDir = "gopollerdb/smssettings"
 	_, err := os.Stat(Settings.Dir)
 	if err != nil {
 		os.MkdirAll(Settings.Dir, 0755)
 	}
-	TaskMap, _ = LoadRedisTasks()
+	_, err = os.Stat(Settings.SMSSettingsDir)
+	if err != nil {
+		os.MkdirAll(Settings.SMSSettingsDir, 0755)
+	}
+
+	TaskMap, _ = LoadTasks(Settings.Dir)
 	for id, val := range TaskMap {
 		if val.Running {
 			//val.Ch = make(chan bool)
